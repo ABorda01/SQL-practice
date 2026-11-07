@@ -69,13 +69,31 @@ SELECT INSERT('goodbye world', 9, 0, 'cruel ') string;
 
 
 
--- ''''''''''''
--- NUMERIC DATA:
--- ''''''''''''
+-- ''''''''''''''''''''''''''
+-- NUMERIC AND TEMPORAL DATA
+-- ''''''''''''''''''''''''''
 
 
+SELECT POW(2,3) - MOD(4,3);
+
+SELECT CEIL(75.017), FLOOR(75.017), ROUND(75.017, 2), TRUNCATE(75.017, 2);
 
 
+SELECT UTC_TIME();
+
+SELECT CAST('2019-09-17 15:30:00' AS DATETIME);
+
+SELECT HOUR(CAST('2019-09-17 15:30:00' AS DATETIME)) AS h,
+       DATE_FORMAT(CAST('2019-09-17 15:30:00' AS DATETIME), '%Y-%m-%d %H:%i:%s') AS full_dt;
+
+SELECT CAST('2019-09-17 15:30:00' AS TIME) AS time,
+    CAST('2019-09-17 15:30:00' AS DATE) as date;
+
+ SELECT STR_TO_DATE('September 17, 2019', '%M %d, %Y'),
+    DAYNAME(STR_TO_DATE('September 17, 2019', '%M %d, %Y'));
+    -- Here: '%M' is a str month, '%d' a numeric day and '%Y' a 4-digit year
+
+SELECT EXTRACT(MONTH FROM '2019-09-18 22:19:05');
 
 
 
