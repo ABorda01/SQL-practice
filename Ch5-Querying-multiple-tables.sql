@@ -43,6 +43,9 @@ WHERE c.address_id = a.address_id;
 
 -- OUTER JOIN would instead include all columns even if no match was found
 
+-- LEFT JOIN: Keeps rows with no present "ON" value as null on the LEFT of the 
+--            FROM X LEFT JOIN Y ON... 
+-- RIGHT JOIN: Analogously would keep all the Y rows on the previous structure
 
 
 -- MULTI INNER JOIN: city_id is shared between address and city but not with customer
