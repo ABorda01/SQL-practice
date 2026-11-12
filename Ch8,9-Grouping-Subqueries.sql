@@ -240,8 +240,125 @@ WHERE EXISTS (
     SELECT 1 FROM rental r -- 1 is a placeholder, * would yield the same or anything else
     WHERE r.customer_id = c.customer_id AND date(r.rental_date) < '2005-05-25'
 );
--- EXISTS (subquery): true if the subquery returns >= 1 row; values are ignored,
+-- EXISTS (subquery): true if the subquery returns >= 1 rows; values are ignored,
 -- NOT EXISTS: keeps outer rows with no match (safer than NOT IN when NULLs are possible).
+
+
+
+-- DATA MANIPULATION USING CORRELATED SUBQUERIES:
+
+CREATE DATABASE IF NOT EXISTS practice;
+
+CREATE TABLE practice.customer LIKE sakila.customer;            -- same columns, types, keys, indexes
+INSERT INTO practice.customer SELECT * FROM sakila.customer; 
+CREATE TABLE practice.rental LIKE sakila.rental;            -- same columns, types, keys, indexes
+INSERT INTO practice.rental SELECT * FROM sakila.rental;   -- copy the data
+
+SHOW TABLES FROM practice;
+
+UPDATE practice.customer AS c
+SET c.last_update =
+    (SELECT MAX(r.rental_date) FROM practice.rental AS r
+    WHERE r.customer_id = c.customer_id)
+WHERE EXISTS
+    (SELECT 1 FROM practice.rental AS r
+    WHERE r.customer_id = c.customer_id);
+
+SELECT c.first_name, c.last_name, c.last_update, MAX(r.rental_date)
+FROM practice.customer AS c INNER JOIN practice.rental AS r
+ON r.customer_id = c.customer_id
+GROUP BY c.customer_id;
+
+
+DELETE FROM practice.customer
+WHERE 365 < ALL
+  (SELECT DATEDIFF('2006-11-15', r.rental_date)
+ FROM practice.rental r
+ WHERE r.customer_id = customer.customer_id);
+
+SELECT * FROM practice.customer; 
+
+DROP TABLE IF EXISTS practice.customer;
+DROP TABLE IF EXISTS practice.rental;
+
+SHOW TABLES FROM practice;
+
+
+
+-- SUBQUERIES AS DATA SOURCES:
+
+
+-- Subquery on FORM clause: HAVE TO BE NON-CORRELATED
+SELECT c.first_name, c.last_name, pymnt.num_rentals, pymnt.tot_payments
+FROM customer AS c
+INNER JOIN
+    (SELECT customer_id, count(*) AS num_rentals, sum(amount) AS tot_payments
+    FROM payment
+    GROUP BY customer_id
+    ) AS pymnt
+ON c.customer_id = pymnt.customer_id;
+
+
+-- Data generation in subquery:
+
+SELECT pymnt_grps.name, count(*) AS num_customers
+FROM
+    (SELECT customer_id,
+    count(*) AS num_rentals, sum(amount) AS tot_payments
+    FROM payment
+    GROUP BY customer_id
+    ) AS pymnt
+INNER JOIN                 -- Here we create the table with the categories we wish to group by later
+    (SELECT 'Small Fry' name, 0 AS low_limit, 74.99 AS high_limit -- SELECT without FROM produces a row of constants
+    UNION ALL              -- UNION ALL stacks the three rows of contants on top of each other
+    SELECT 'Average Joes' name, 75 AS low_limit, 149.99 AS high_limit
+    UNION ALL
+    SELECT 'Heavy Hitters' name, 150 AS low_limit, 9999999.99 AS high_limit
+    ) AS pymnt_grps
+ON pymnt.tot_payments BETWEEN pymnt_grps.low_limit AND pymnt_grps.high_limit -- groups all customers in the range
+GROUP BY pymnt_grps.name;
+
+-- See inner table:
+
+SELECT 'Small Fry' name, 0 low_limit, 74.99 high_limit
+    UNION ALL
+    SELECT 'Average Joes' name, 75 low_limit, 149.99 high_limit
+    UNION ALL
+    SELECT 'Heavy Hitters' name, 150 low_limit, 9999999.99 high_limit;
+
+
+
+
+-- SUBQUERIES AS EXPRESSION GENERATORS:
+
+SELECT
+  (SELECT c.first_name FROM customer c
+   WHERE c.customer_id = p.customer_id
+  ) AS first_name,
+  (SELECT c.last_name FROM customer c
+   WHERE c.customer_id = p.customer_id
+  ) AS last_name,
+  (SELECT ct.city FROM customer c
+   INNER JOIN address a
+     ON c.address_id = a.address_id
+   INNER JOIN city ct
+     ON a.city_id = ct.city_id
+   WHERE c.customer_id = p.customer_id
+  ) AS city,
+sum(p.amount) tot_payments, count(*) tot_rentals
+FROM payment p
+GROUP BY p.customer_id;
+
+
+
+
+
+
+
+
+
+
+
 
 
 
