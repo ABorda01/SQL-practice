@@ -71,17 +71,71 @@ NATURAL JOIN rental r;
 -- =========================================
 
 
+SELECT first_name, last_name,
+CASE
+    WHEN active = 1 THEN 'ACTIVE'
+    ELSE 'INACTIVE'
+END activity_type
+FROM customer;
+
+-- CASE SYNTAX:
+-- CASE
+--     WHEN condition1 THEN result1
+--     WHEN condition2 THEN result2
+--     ...
+--     ELSE default_result
+-- END
+
+
+SELECT title, length,
+    CASE
+        WHEN length < 60  THEN 'short'
+        WHEN length < 120 THEN 'medium'
+        ELSE 'long'
+    END AS length_class
+FROM film;
+
+
+-- Can be used even in subqueries
+
+SELECT c.first_name, c.last_name,
+CASE
+    WHEN c.active = 0 THEN 0
+    ELSE (
+        SELECT COUNT(*)
+        FROM rental AS r
+        WHERE c.customer_id = r.customer_id
+    )
+END as num_rentals
+FROM customer as C;
+
+
+-- SIMPLE CASE:
+
+-- CASE expression
+--     WHEN value1 THEN result1
+--     WHEN value2 THEN result2
+--     ...
+--     ELSE default_result
+-- END
+
+SELECT first_name,
+       CASE active
+           WHEN 1 THEN 'active'
+           WHEN 0 THEN 'inactive'
+       END AS status
+FROM customer;
 
 
 
-
-
-
-
-
-
-
-
-
+SELECT
+SUM(CASE WHEN monthname(rental_date) = 'May' THEN 1
+ELSE 0 END) May_rentals,
+SUM(CASE WHEN monthname(rental_date) = 'June' THEN 1
+ELSE 0 END) June_rentals,
+SUM(CASE WHEN monthname(rental_date) = 'July' THEN 1
+ELSE 0 END) July_rentals
+FROM rental
+WHERE rental_date BETWEEN '2005-05-01' AND '2005-08-01';
 
 
