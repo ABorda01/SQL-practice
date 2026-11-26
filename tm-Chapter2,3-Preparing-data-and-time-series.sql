@@ -130,18 +130,54 @@ ORDER BY sales_year, store_type;
 
 
 
+SELECT make_date(2020,09,01);
+
+SELECT to_date(concat(2020,'-',09,'-',01), 'yyyy-mm-dd');
 
 
+SELECT age(date('2020-06-30'),date('2020-01-01'));
+
+SELECT date('2020-06-01') + interval '7 days' as new_date;
 
 
+-- TRENDING THE DATA
+
+-- These kind of queries are ready to be plotted for trend-iding
+
+SELECT date_part('year',sales_month) AS sales_year
+,sum(sales) AS sales
+FROM retail_sales
+WHERE kind_of_business = 'Retail and food services sales, total'
+GROUP BY 1
+ORDER BY 1 ASC;
 
 
+SELECT date_part('year',sales_month) AS sales_year,
+kind_of_business,
+sum(sales) AS sales
+FROM retail_sales
+WHERE kind_of_business in ('Book stores' ,
+    'Sporting goods stores','Hobby, toy, and game stores')
+GROUP BY 1,2
+ORDER BY 1,2;
 
 
-
-
-
-
+SELECT t.sales_year AS sales_year,
+t.women_sales - t.men_sales AS diff,
+CONCAT (CAST(ROUND((100 * t.women_sales / (t.women_sales+t.men_sales)), 2) 
+    AS varchar), '%') AS pct
+FROM (
+    SELECT date_part('year', sales_month) AS sales_year,
+    SUM(CASE WHEN kind_of_business = 'Women''s clothing stores' 
+        THEN sales END) AS women_sales,
+    SUM(CASE WHEN kind_of_business = 'Men''s clothing stores' 
+        THEN sales END) AS men_sales
+    FROM retail_sales
+    WHERE kind_of_business in ('Men''s clothing stores', 
+        'Women''s clothing stores')
+    GROUP BY 1
+    ) AS t
+ORDER BY 1;
 
 
 
